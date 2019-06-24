@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <ui:composition template="/templates/template.xhtml">
+        <ui:define name="titulo">Listagem de Passagens</ui:define>
+        <ui:define name="conteudo">
+            <h:form id="formListagem" prependId="false">
+                <!--p:messages/-->
+                <p:growl/>
+                <p:commandButton value="Novo" 
+                                 action="#{controlePassagem.novo()}" 
+                                 update="formEdicao"
+                                 process="@form"
+                                 icon="ui-icon-plus"
+                                 oncomplete="PF('dlg').show();"/>
+                <div align="center">
+                    <p:panelGrid columns="11">
+                        <p:outputLabel value="Ordem: "/>
+                        <p:selectOneMenu id="ordem"
+                                         value="#{controlePassagem.dao.ordem}">
+                            <f:selectItem itemLabel="ID" itemValue="id"/>
+                            <f:selectItem itemLabel="Nome" itemValue="nome"/>
+
+                            <p:ajax update="listagem"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="Filtro: "/>
+                        <p:inputText value="#{controlePassagem.dao.filtro}">
+                            <p:ajax event="keyup" update="listagem"/>
+                        </p:inputText>
+                        <p:commandButton value="Filtrar"
+                                         update="listagem"/>
+                        <p:outputLabel value="Máximo de Objetos: "/>
+                        <p:inputNumber value="#{controlePassagem.dao.maximoObjetos}"
+                                       size="3"
+                                       thousandSeparator=""
+                                       decimalSeparator=""
+                                       decimalPlaces="0">
+                            <p:ajax event="keyup" update="listagem"/>
+                        </p:inputNumber>
+                        <p:commandButton actionListener="#{controlePassagem.dao.primeiro()}"
+                                         title="Primeiro"
+                                         icon="ui-icon-seek-first"
+                                         update="listagem"/>
+                        <p:commandButton actionListener="#{controlePassagem.dao.anterior()}"
+                                         title="Anterior"
+                                         icon="ui-icon-seek-prev"
+                                         update="listagem"/>
+                        <p:commandButton actionListener="#{controlePassagem.dao.proximo()}"
+                                         title="Próximo"
+                                         icon="ui-icon-seek-next"
+                                         update="listagem"/>
+                        <p:commandButton actionListener="#{controlePassagem.dao.ultimo()}"
+                                         title="Último"
+                                         icon="ui-icon-seek-end"
+                                         update="listagem"/>
+                    </p:panelGrid>
+                </div>
+                <p:dataTable value="#{controlePassagem.dao.listaObjetos}" 
+                             var="item"
+                             id="listagem">
+                    <f:facet name="footer">
+                        <p:outputLabel value="#{controlePassagem.dao.mensagemNavegacao}"/>
+                    </f:facet>
+                    <p:column headerText="ID">
+                        <p:outputLabel value="#{item.id}"/>
+                    </p:column>
+                    <p:column headerText="Data da Compra">
+                        <p:outputLabel value="#{item.dataFormatada}"/>
+                    </p:column>
+                    <p:column headerText="Pessoa">
+                        <p:outputLabel value="#{item.pessoa}"/>
+                    </p:column>
+
+
+                    <p:column headerText="Ações">
+                        <p:commandButton action="#{controlePassagem.editar(item.id)}"
+                                         icon="ui-icon-pencil"
+                                         title="Editar"
+                                         oncomplete="PF('dlg').show();"
+                                         update="formEdicao"
+                                         process="@form"/>
+                        <p:commandButton action="#{controlePassagem.remover(item.id)}"
+                                         icon="ui-icon-trash"
+                                         title="Remover"
+                                         update="@form"
+                                         process="@form"
+                                         onclick="if (!confirm('Confirma a exclusão'))
+                                                     return false"/>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+        </ui:define>
+        <ui:define name="dialogos">
+
+            <p:dialog header="Edição" widgetVar="dlg"
+                      resizable="false"
+                      modal="true"
+                      width="50%"
+                      height="100%"
+                      position="top">
+                <h:form id="formEdicao" prependId="false">
+                    <p:growl id="growl"/>
+                    <p:tabView id="tab" prependId="false">
+                        <p:tab title="Dados Passagems">
+                            <div align="center">
+                                <p:panelGrid columns="2">
+                                    <p:outputLabel value="ID"/>
+                                    <p:inputText value="#{controlePassagem.obj.id}"
+                                                 readonly="true" size="5"/>
+
+                                    <p:outputLabel value="Data da Compra"/>
+                                    <p:calendar value="#{controlePassagem.obj.dataCompra}"
+                                                id="txtData" pattern="dd/MM/yyyy" 
+                                                navigator="true">
+                                        <f:converter converterId="converterCalendar"/>
+                                    </p:calendar> 
+
+                                    <p:outputLabel value="Bagagem"/>
+                                    <p:inputText value="#{controlePassagem.obj.bagagem}"
+                                                 id="txtBagagem" size="5" maxlength="5"/>
+
+
+                                    <p:outputLabel value="Pessoa" for="selectPessoa"/>
+                                    <p:selectOneMenu id="selectPessoa" 
+                                                     value="#{controlePassagem.obj.pessoa}"
+                                                     filter="true"
+                                                     filterMatchMode="startWith">
+                                        <f:converter converterId="converterPessoa" />
+                                        <f:selectItem noSelectionOption="true"
+                                                      itemLabel="Selecione um registro" />
+                                        <f:selectItems value="#{controlePessoa.dao.listaTodos}"
+                                                       var="p"
+                                                       itemLabel="#{p.nome} - #{p.cpf}"/>
+                                    </p:selectOneMenu>
+
+                                    <p:outputLabel value="Classe" for="selectClasse"/>
+                                    <p:selectOneMenu id="selectClasse" 
+                                                     value="#{controlePassagem.obj.classe}"
+                                                     filter="true"
+                                                     filterMatchMode="startWith">
+                                        <f:converter converterId="converterClasse" />
+                                        <f:selectItem noSelectionOption="true"
+                                                      itemLabel="Selecione um registro" />
+                                        <f:selectItems value="#{controleClasse.dao.listaTodos}"
+                                                       var="p"
+                                                       itemLabel="#{p.nome}"/>
+                                    </p:selectOneMenu>
+
+                                    <p:outputLabel value="Voo Agendado para dia" for="selectVooAgendado"/>
+                                    <p:selectOneMenu id="selectVooAgendado" 
+                                                     value="#{controlePassagem.obj.vooAgendado}"
+                                                     filter="true"
+                                                     filterMatchMode="startWith">
+                                        <f:converter converterId="converterVooAgendado" />
+                                        <f:selectItem noSelectionOption="true"
+                                                      itemLabel="Selecione um registro" />
+                                        <f:selectItems value="#{controleVooAgendado.dao.listaTodos}"
+                                                       var="va"
+                                                       itemLabel="#{va.dataFormatada} - #{va.aeronave} "/>
+                                    </p:selectOneMenu>
+
+
+                                </p:panelGrid>
+                            </div>
+                        </p:tab>
+
+
+                    </p:tabView>
+                    <p:panel>
+                        <div align="center">
+                            <p:commandButton value="Salvar"
+                                             icon="ui-icon-disk"
+                                             actionListener="#{controlePassagem.salvar()}"
+                                             oncomplete="if(!args.validationFailed){PF('dlg').hide();}"
+                                             update="formEdicao formListagem"/>
+                        </div>
+                    </p:panel>
+                </h:form>
+
+            </p:dialog>
+
+        </ui:define>
+    </ui:composition>
+</html>
